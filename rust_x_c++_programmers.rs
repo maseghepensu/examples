@@ -11,6 +11,31 @@ fn foomod(x: &mut Box<i32> ) {
     **x = **x * 10;  // x : &mut Box<i32>, *x = mut Box<i32>, **x = i32;
 }
 
+struct S {
+  f: i32,
+}
+impl S {
+    fn new(v :i32) -> S {
+        Self{f:v}
+    }
+    fn add(&mut self, i: i32) {
+        self.f += i;
+    }
+    fn toS(&self) -> String {
+       //self.to_string() no: S dovrebbe soddisfare gia' std::fmt::Display
+       format!("S({})", self.f) 
+    }
+}
+
+fn f_i32ref_i32(_:&i32, _:i32) {
+    
+}
+fn refs() {
+    let x = &3;
+    let y = *x;
+    println!("x={}, y={}",x,y); // gli interi lavorano x copia
+    f_i32ref_i32(x,y);
+}
 fn main() {
     println!("Hello, world!");
     let x: Box<i32> = Box::new(7);
@@ -47,4 +72,17 @@ fn main() {
     let mut xm = Box::new(16);   // xm deve essere mut, altrimenti non puoi passarla come &mut Box<i32>
     foomod(&mut xm);
     println!("xm={}",xm);   // ok sempre accessibile: xm=160
+    
+    let mut s0 = S::new(4);  // nota: s0 deve essere mutabile
+    println!("s0.f={}", s0.f);  // s0.f=4
+    s0.add(17);
+    println!("s0.f={}", s0.f);  // s0.f=21
+    let mut bbb = Box::new(Box::new(Box::new(S::new(8))));
+    println!("bbb.f={}", bbb.f); // bbb.f=8  non serve derenziare 3 volte il puntatore
+    bbb.add(200);
+    println!("bbb.f={}", bbb.f); // anche per le call di metodi funziona: bbb.f=208
+    println!("bbb.toS={}", bbb.toS()); // bbb.toS=S(208)
+    // borrowed pointers == borrowed referemnce == references
+    refs();
+    
 }
