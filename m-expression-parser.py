@@ -15,6 +15,10 @@ se il token corrente e' un ID (non e' una [ o ; o ]),
 se il token successivo e' [, allora chiamo la procedura
 app altrimenti consumo ID  (dovrebbe essere quindi LL(2) )
 
+output:
+
+dato che P[ x; y; ... ] significa che P e' applicato a y, y, ...,
+l'output e' una s-espressione, ovvero (P x y ...)
 
 '''
 
@@ -46,6 +50,7 @@ def arg(tt):
   # salta ;
   if tt[ti] != ';':
     print('ERRORE, atteso ;, trovato', tt[ti])
+    raise RuntimeError('errore di parsing')
   ti += 1
   res = []
   #while tt[ti] != Eot and tt[ti] != ']':
@@ -73,12 +78,14 @@ def lista(tt):
   ris = [e0]
   while tt[ti] != ']' :
      a = arg(tt)
-     ris.append(flat(a))
+     # ris.append(flat(a))
+     ris.append(a)
   return ris     
   
   
 def expr(tt):
   global ti
+  #print('ocio', len(tt), ti)
   if tt[ti] == '[':
      return lista(tt)
   if tt[ti+1].startswith('['):
@@ -89,8 +96,10 @@ def expr(tt):
   
 def test(p):
   global ti
-  print('input',p)
-  p = p.replace('[', ' [ ').replace(']', ' ] ').replace(';',' ; ').split() #.append(-1)
+  #print('input',p)
+  # il "Lexer" : pro
+  p = p.replace('[', ' [ ').replace(']', ' ] ').replace(';',' ; ').replace(',', ' , ').split() #.append(-1)
+  print('input:',' '.join(p))
   p.append(-1)
   #print(p)
   ti = 0
@@ -107,6 +116,7 @@ r = expr(p0)
 print(r)'''
 
 #test(''.join(p3))
+
 test( 'F[x;y]')
 test( 'F[x;G[y]]')
 test( 'F[x;G[y;j]]')
@@ -119,3 +129,58 @@ test( '[F[x;K[y;m;o]];O[t;v;oi]]')
 test( 'P[F[x;K[y;m;o]];O[t;v;oi]]')
 test( 'P[F[x;K[y;m]];O[t;v]]')
 test( 'P[F[x;K[y]];O[t]]')
+# test( '[ P[Q[s;t] ; M[G[u;v]]')
+# test( '[x,y]')
+
+test( '[ P[Q[s;t]] ; M[G[u;v]] ]')
+test( '[M[G[u;v]]]')
+
+test( '[x;M[G[u;v]]]')
+
+''' OUTPUT:
+input: F [ x ; y ]
+outp  ['F', 'x', 'y']
+-----------------
+input: F [ x ; G [ y ] ]
+outp  ['F', 'x', ['G', 'y']]
+-----------------
+input: F [ x ; G [ y ; j ] ]
+outp  ['F', 'x', ['G', 'y', 'j']]
+-----------------
+input: F [ G [ x ] ]
+outp  ['F', ['G', 'x']]
+-----------------
+input: F [ G [ x ; y ] ]
+outp  ['F', ['G', 'x', 'y']]
+-----------------
+input: F [ G [ x ; y ; z ] ]
+outp  ['F', ['G', 'x', 'y', 'z']]
+-----------------
+input: [ F [ x ; y ] ; u ]
+outp  [['F', 'x', 'y'], 'u']
+-----------------
+input: [ F [ x ; K [ y ; m ; o ] ] ; u ]
+outp  [['F', 'x', ['K', 'y', 'm', 'o']], 'u']
+-----------------
+input: [ F [ x ; K [ y ; m ; o ] ] ; O [ t ; v ; oi ] ]
+outp  [['F', 'x', ['K', 'y', 'm', 'o']], ['O', 't', 'v', 'oi']]
+-----------------
+input: P [ F [ x ; K [ y ; m ; o ] ] ; O [ t ; v ; oi ] ]
+outp  ['P', ['F', 'x', ['K', 'y', 'm', 'o']], ['O', 't', 'v', 'oi']]
+-----------------
+input: P [ F [ x ; K [ y ; m ] ] ; O [ t ; v ] ]
+outp  ['P', ['F', 'x', ['K', 'y', 'm']], ['O', 't', 'v']]
+-----------------
+input: P [ F [ x ; K [ y ] ] ; O [ t ] ]
+outp  ['P', ['F', 'x', ['K', 'y']], ['O', 't']]
+-----------------
+input: [ P [ Q [ s ; t ] ] ; M [ G [ u ; v ] ] ]
+outp  [['P', ['Q', 's', 't']], ['M', ['G', 'u', 'v']]]
+-----------------
+input: [ M [ G [ u ; v ] ] ]
+outp  [['M', ['G', 'u', 'v']]]
+-----------------
+input: [ x ; M [ G [ u ; v ] ] ]
+outp  ['x', ['M', ['G', 'u', 'v']]]
+-----------------
+'''
